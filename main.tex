@@ -1,0 +1,308 @@
+\documentclass[10pt, oneside]{article} 
+\usepackage{amsmath, amsthm, amssymb, calrsfs, wasysym, verbatim, bbm, color, graphics, geometry}
+
+\geometry{tmargin=.75in, bmargin=.75in, lmargin=.75in, rmargin = .75in}  
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Cdot}{\boldsymbol{\cdot}}
+
+\newtheorem{thm}{Theorem}
+\newtheorem{defn}{Definition}
+\newtheorem{conv}{Convention}
+\newtheorem{rem}{Remark}
+\newtheorem{lem}{Lemma}
+\newtheorem{cor}{Corollary}
+
+
+\title{Running Lecture Outline: CS 221}
+\author{Allison Tee}
+\date{Academic Year 2022-2023}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\vspace{.25in}
+
+\section{Fall 2022}
+
+\subsection{Wednesday, Sept 28: Machine Learning}
+
+\begin{itemize}
+
+\item {\bf Reflex-based models:} $x \text{ input} \to f \text{ predictor} \to y$ output
+
+\item {\bf Binary classification} outputs one of two labels $y \in \{ -1, +1\}$\\
+ex: Fraud detection, toxic comments, Higgs boson.
+
+\item {\bf Regression:} $x \text{ input} \to f \to y \in \mathbb{R} \text{ response}$\\
+ex: Poverty mapping, housing, arrival times.\\
+
+\item {\bf Structured prediction:} $x \to f \to y$ is a complex object.\\
+ex: Machine translation, dialogue, image captioning, image segmentation.\\
+
+\item {\bf Least squares linear regression} was originally used by Gauss to predict Ceres' orbit within 1/2 a degree.\\
+ex: Training data -learning algorithm$\to$ predictor $f$ (takes an input and gives an output)\\
+\begin{tabular}{ c c }
+x & y \\ 
+1 & 1 \\  
+2 & 3 \\
+4 & 3
+\end{tabular}
+
+\item Design decisions:
+\begin{itemize}
+\item Which predictors are possible? hypothesis class
+\item How good is a predictor? loss function
+\item How do we compute the best predictor? optimization algorithm
+\end{itemize}
+
+\item {\bf Vector notation:} weight vector $\vec{w} = [w_1, w_2]$ feature extractor $\phi(x) = [1, x]$ feature vector\\
+$f_w(x) = \vec{w}\cdot\phi(x)$\\
+{\bf Hypothesis class:} $\mathcal{F} = \{f_w : \vec{w} \in \mathbb{R}^2\}$
+
+\item {\bf Loss function:} Minimize the residual (difference between observed and predicted).\\
+ex: $Loss(x, y, \vec{w}) = (f_w(x) - y)^2$ (squared loss)\\
+$TrainLoss(\vec{w}) = \frac{1}{|\mathcal{D}_{train}|}\Sigma_{(x, y) \in \mathcal{D}_{train}}Loss(x, y, \vec{w})$
+
+\begin{defn}
+The {\bf gradient} $\triangledown TrainLoss(\vec{w})$ is the direction that increases the training loss the most.
+\end{defn}
+
+\item {\bf Algorithm: gradient descent} Initialize $\vec{w} = \vec{0}$. For $t = 1,..., T$: $\vec{w} \leftarrow \vec{w} - \eta \triangledown TrainLoss(\vec{w})$.
+
+\item ex: For the previous training data, let's use $\triangledown TrainLoss(\vec{w}) = \frac{1}{|\mathcal{D}_{train}|}\Sigma_{(x, y) \in \mathcal{D}_{train}}2(\vec{w} \cdot \phi(x) - y)\phi(x)$\\
+Final weight vector (after 200 steps): $\vec{w} = [1, 0.57]$
+
+\item {\bf Linear classification ex:} Training data -learning algorithm$\to$ classifier $f$ (takes an input and gives a label)\\
+\begin{tabular}{ c c c}
+$x_1$ & $x_2$ & y \\ 
+0 & 2 & 1\\  
+-2 & 0 & 1 \\
+1 & -1 & -1
+\end{tabular}
+sign($z$) =     \begin{cases}
+        1 & \text{if } z > 0\\
+        -1 & \text{if } z < 0\\
+        0 & \text{if } z = 0
+    \end{cases}\\
+Decision boundary: $x$ s.t. $\vec{w} \cdot \phi(x) = 0$
+
+\item {\bf General binary classifier:} $f_w(x) = sign(\vec{w} \cdot \phi(x))$\\
+{\bf Hypothesis class:} $\mathcal{F} = \{ f_{\vec{w}} : \vec{w} \in \mathbb{R}^2\}$
+
+\item {\bf Loss function:} $Loss_{0-1}(x,y,\vec{w}) = 1[f_{\vec{w}}(x) \neq y]$ (zero-one loss)
+
+\begin{defn}
+The {\bf score} on an example $(x, y)$ is $\vec{w} \cdot \phi(x)$, how confident we are in predicting +1.
+\end{defn}
+
+\begin{defn}
+The {\bf margin} on an example $(x, y)$ is $(\vec{w} \cdot \phi(x))y$, how correct we are.
+\end{defn}
+
+\item {\bf Hinge loss:} The maximum over a descending line and the zero function. Fixes the problem of $Loss_{0-1}$ not going anywhere when the gradient is 0.\\
+$Loss_{hinge}(x,y,\vec{w})=max\{1 = (\vec{w} \cdot \phi(x))y, 0\}$\\
+$\triangledown Loss_{hinge}(x, y, \vec{w}) =$
+ \begin{cases}
+        -\phi(x)y & \text{if } \{1 - (\vec{w} \cdot \phi(x))y\} > \{0\}\\
+        0 & \text{otherwise} \\
+    \end{cases}\\
+\end{itemize}
+
+\subsection{Mon, Oct 3: Neural networks and Backpropagation}
+
+\begin{itemize}
+
+\item \textbf{Linear regression with groups} is a thing.
+
+\item \textbf{Average loss:} $Loss(x, y, \vec{w}) = (f_{\vec{w}} (x) - y)^2$
+
+\item One can also break down loss into per-group loss and focus on minimizing the maximum group loss (no group left behind, distributionally robust optimization or DRO).\\
+$TrainLoss_{\underset{g}{max}}TrainLoss_g(\vec{w})$
+
+\item Nuances: Intersectionality? Don't know groups? Overfitting?
+
+\item Linear predictors: $f_w(x) = \vec{w} * \phi(x), \phi(x) = [1, x]$\\
+Non-linear (quadratic) predictors: $f_w(x) = \vec{w} * \phi(x), \phi(x) = [1, x, x^2]$\\
+Non-linear neural networks: $f_w(x) = \vec{w} * \sigma({\bf V}(\phi(x))), \phi(x) = [1, x]$\\
+\item ex: Input: Positions of two oncoming cars $x = [x_1, x_2]$. Output: whether safe $(y = +1)$ or collide $(y = -1)$
+
+\item (2-layer NN) Predictor: $f(x) = sign(h_1(x) + h_2(x)) = sign([1,1]\cdot h(x))$
+
+\item Problem: Gradient of $h_1(x)$ with respect to $v_1$ is 0. Solution: Replace with an activation function $\sigma$ with non-zero gradients.
+
+\item \textbf{Deep neural networks: } Neural networks with many layers (1-layer NN is just a linear predictor). Layers can represent multiple levels of abstractions.
+
+\item 4-layer NN: $Loss(X, y, V_1, V_2, V_3, \vec{w}) = (\vec{w} \cdot \sigma(V_3\sigma(V_2\sigma(V_1\phi(x)))))$
+
+\item Gradient: How much does $c$ change when $a$ or $b$ changes? (Chain rule and derivatives)
+
+\item Forward: $f_i$ is value for subexpression rooted at $i$. Backward: $g_i = \frac{\partial loss}{\partial f_i}$ is how $f_i$ influences loss.
+\item {\bf Backpropagation:} Forward pass: compute each $f_i$ (from leaves to root) and backward pass: compute each $g_i$ (from root to leaves)
+\end{itemize}
+\subsection{Weds, Oct 5: K-means and Generalization}
+
+\begin{itemize}
+
+\item Clustering is an example of unsupervised learning (useful b/c lots of labeled data is difficult to obtain).
+
+\item \textbf{K-means clustering:} Each cluster $k = 1,...,K$ is represented by a centroid $\mu_k \in \mathbb{R}^d$.\\
+$Loss_{kmeans}(z, \mu) = \sum_{i=1}^n||\phi(x_i)-\mu_{z_i}||^2$\\
+$\underset{z}{min}\underset{\mu}{min}Loss_{kmeans}(z, \mu)$
+
+\item Steps: Initialize $\vec{\mu}$, and alternate averaging through iterations until converged.
+item \textbf{K-means} Initialize $\vec{\mu} = [\mu_1,...,\mu_k]$ randomly. For $t = 1,...,T$: Step 1- set assignments $\vec{z}$ given $\vec{\mu}$ and Step 2- set centroids $\vec{\mu}$ given $\vec{z}$
+
+\item K-means is guaranteed to converge to a local minimum, but not a global one (solution: run multiple times with different random initializations).
+
+\item Strawman algorithm: If the predictor matches the result, return it, else crash. (Minimizing training loss isn't everything)
+
+\item Approx error: how good is the hypothesis class? Estimation error: how good is the learned predictor relative to the potential of the hypothesis class?
+
+\item Control the hypothesis class by reducing dimensionality or reducing the norm (length) using gradient descent or stopping early.
+
+\item Hyperparameter (hypothesis class, training objective, optimization algorithm) decisions need to be made before running the learning algorithm.
+
+\item Don't look at the test set, understand the data, start simple, and practice!
+\end{itemize}
+
+\subsection{Mon, Oct 10: Search Problems Intro}
+
+\begin{itemize}
+
+\item \textbf{Search problems (examples):} Google Maps (shortest), roomba (most coverage, safest, most energy efficient), solving puzzles, machine translation.
+
+\item Classifier (reflex-based models): $x \to f \to$ single action $y \in \{-1, 1\}$\\
+Search problem (state-based models): $x \to f \to$ action sequence $(a_1, a_2, a_3,...)$
+
+\item It takes 7 crossings for a farmer to safely get a cabbage, goat, and wolf across a river.
+
+\item \textbf{Search problem:} $s_{start}$: starting state, $Actions(s)$: possible actions, $Cost(s,a)$: action cost, $Succ(s,a)$: successor (:lenny:), $IsEnd(s)$: reached end state?
+
+\item \textbf{Backtracking search:} Memory $O(D)$ (small), Time $O(b^D)$ (huge)\\
+\textbf{DFS:} Same time and space as backtracking but with 0 cost.\\
+\textbf{BFS:} Memory $O(b^d)$, Time $O(b^d)$ with $c \geq 0$\\
+\textbf{DFS with iterative deepening:} Memory $O(d)$, Time $O(b^d)$, $c \geq 0$
+
+\item \textbf{Dynamic programming (Memoization):} \[ FutureCost(s) = \begin{cases} 
+      0 \text{ if isEnd(s)}\\
+      min_{a\in Actions(s)}[Cost(s,a) + FutureCost(Succ(s,a))] \text{ otherwise}
+   \end{cases}\\
+\]
+  def DynamicProgramming(s):\\
+   If already computed for s, return cached answer.\\
+   If IsEnd(s): return solution\\
+   For each action $a \in Actions(s):$...\\
+
+
+\end{itemize}
+
+\subsection{Mon, Oct 17: Markov Decision Processes}
+
+\begin{itemize}
+
+\item There are uncertainties in the world, so we could end up in multiple different states.\\
+ex: Robotics (unseen obstacles), resource allocation, agriculture
+
+\item Dice game: Each round, can stay or quit. $\$10$ if you quit, and $\$4$ for each round you stay (though if the die rolls 1 or 2, the game ends).
+
+\item Can model states (in, in - stay, in - quit, and END) as Markov process.
+
+\item Transition probability $T(s, a, s')$
+
+\item Magic tram where tram fails with $p=0.5$ (and it costs 2 minutes still)
+
+\item A solution to a MDP is called a \textbf{policy} ($\pi$). At a given state, what is the best action to take.
+
+\item Following a policy yields a random path. The \textbf{utility} of a policy is the discounted sum of the rewards on the path.
+
+\item The \textbf{value} of a policy at a state $V_{\pi}(s)$ is the expected utility.
+
+\item Discount $\gamma = 1$ (save for the future) $\gamma = 0$ (live in the moment)
+
+\item \textbf{Q-value of a policy:} $Q_\pi(s,a)$ is the expected utility of taking action $a$ from state $s$, and then following policy $\pi$
+
+\item \[ V_\pi(s) = \begin{cases} 
+      0 \text{ if isEnd(s)}\\
+     Q_\pi(s,\pi(s)) \text{ otherwise}
+   \end{cases}\\
+\]
+
+\item $Q_\pi(s, \pi(s)) = \sum_{s'}T(s,a,s')[R(s,a,s')+\gamma V_\pi(s')]$
+
+\item (For the dice game) $V_\pi(in) = \frac{1}{3}(4+V_\pi(end))+\frac{2}{3}(4+V_\pi(in)) = 12$
+
+\item \textbf{Policy evaluation:} Updates values at states via iteration.
+\end{itemize}
+\subsection{Weds, Oct 19: MDPs}
+\begin{itemize}
+\item \[ V_{opt}(s) = \begin{cases} 
+      0 \text{ if isEnd(s)}\\
+     \underset{a \in Actions(s)}{max}\text{ }Q_{opt}(s,a) \text{ otherwise}
+   \end{cases}\\
+\]
+\item The \textbf{optimal value} is the maximum value given by any policy.
+
+\item The optimal policy $\pi_{opt} = arg \underset{a \in Actions(s)}{max}\text{ }Q_{opt}(s,a)$
+
+\item \textbf{Value iteration (algo)} Initialize $V_{opt}^{(0)}(s)$ for all states. For each iteration and for each state, calculate $V_{opt}^{(t)}(s)$ from $Q_{opt}^{(t-1)}(s,a)$
+
+\item If either $\gamma < 1$ or the MDP graph is acyclic, then value iteration converges to the correct answer. 
+
+\item Model-based value Iteration estimates the MDP: $T(s,a,s')$ and $Reward(s,a,s')$ and uses that to estimate the utility. Has exploration policy ($\epsilon$ greedy).
+
+\item Model-free Monte Carlo calculates average of utilities.
+
+\item On-policy estimates the value of data-generating policy, and off-policy estimates the value of another policy.
+
+\end{itemize}
+
+\subsection{Mon, Oct 28: Games Intro}
+
+\begin{itemize}
+
+\item \textbf{Game tree:} Each node is a decision point for a player. Each root-to-leaf path is a possible outcome of the game.
+
+\item ex: Picking one of the games A (-50, 50), B (1, 3), or (-5, 15) and having the other person pick a reward. The best game to play depends on whether the opponent is adversarial, random, or beneficial.
+
+\item Chess is an example of a game with players, (end) states, actions, and utility.
+
+\item Halving game: Start with $N$, players take turns decrementing $N$ or replacing it with $\lceil \frac{N}{2} \rceil$. The guy with 0 wins.
+
+\item \textbf{expectimax:} The maximum expected utility of any agent policy when playing with respect to a fixed and known opponent policy $\pi_{opp}$.
+
+\item \textbf{minimax:} Don't know opponent's policy, so assume the worst case.
+
+\item $V(\pi_{max}, \pi_{min}) \geq V(\pi_{agent}, \pi_{min})$ for all $\pi_{agent}$
+\end{itemize}
+
+\subsection{Weds, Oct 26: Games cont.}
+
+\begin{itemize}
+
+\item \textbf{Expectiminimax:} Considers min, max, and chance.
+
+\item Eval(s) attempts to estimate $V_{minmax}(s)$ using domain knowledge. No guarantees (unlike $A*$) on the error from approx.
+
+\item ex: Chess, Eval(s) = material + mobility + king-safety + center-control
+
+\item \textbf{Optimal path:} Path that minimax policies take. Values of all nodes on path are the same. Can use alpha-beta pruning to decrease number of nodes evaluated where $a_s$ lower bound on value of max nodes. $b_s$ is upper bound on values of min nodes.
+
+\item Worst move ordering: $O(b^{2d})$, but best is $O(b^{2*0.5d})$. Random ordering is $O(b^{2*0.75d})$ when $b = 2$. Quadratic formula for general b.
+\end{itemize}
+
+\subsection{Template}
+
+\begin{itemize}
+
+\item Etc.
+
+\end{itemize}
+
+\end{document}
